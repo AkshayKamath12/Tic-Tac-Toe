@@ -15,36 +15,14 @@ const initBoard = [
   [null, null, null],
 ];
 
+const players = {
+  X: "Player 1",
+  O: "Player 2",
+};
+
 function App() {
+  const [currNames, changeNames] = useState(players);
   const [gameTurns, setGameTurns] = useState([]);
-
-  let currPlayer = deriveActivePlayer(gameTurns);
-  let currBoard = initBoard;
-  for (const turn of gameTurns) {
-    const { square, player } = turn;
-    const { row, col } = square;
-    currBoard[row][col] = player;
-  }
-  let winner = null;
-  let draw = false;
-  
-  for (const combination of WINNING_COMBINATIONS) {
-    const firstSymbol = currBoard[combination[0].row][combination[0].column];
-    const secondSymbol = currBoard[combination[1].row][combination[1].column];
-    const thirdSymbol = currBoard[combination[2].row][combination[2].column];
-    if (
-      firstSymbol &&
-      firstSymbol === secondSymbol &&
-      firstSymbol === thirdSymbol
-    ) {
-      winner = firstSymbol;
-      break;
-    }
-  }
-
-  if(!winner && gameTurns.length == 9){
-    draw = true;
-  }
 
   function handleCurrPlayer(rowInd, colInd) {
     setGameTurns((prevTurns) => {
@@ -56,26 +34,78 @@ function App() {
       return updatedTurns;
     });
   }
+  function deriveGameBoard(gameTurns) {
+    let currBoard = [...initBoard.map((array) => [...array])];
+    for (const turn of gameTurns) {
+      const { square, player } = turn;
+      const { row, col } = square;
+      currBoard[row][col] = player;
+    }
+    return currBoard;
+  }
+
+  let currPlayer = deriveActivePlayer(gameTurns);
+  let currBoard = deriveGameBoard(gameTurns);
+  const winner = deriveWinner(currBoard, currNames);
+
+  const draw = !winner && gameTurns.length === 9;
+  
+
+  
+
+  function handleReset() {
+    setGameTurns([]);
+  }
+
+  function handlePlayerNameChange(symbol, newName) {
+    changeNames((state) => {
+      return {
+        ...state,
+        [symbol]: newName,
+      };
+    });
+  }
+
+  function deriveWinner(currBoard, currNames) {
+    let winner = null;
+    for (const combination of WINNING_COMBINATIONS) {
+      const firstSymbol = currBoard[combination[0].row][combination[0].column];
+      const secondSymbol = currBoard[combination[1].row][combination[1].column];
+      const thirdSymbol = currBoard[combination[2].row][combination[2].column];
+      if (
+        firstSymbol &&
+        firstSymbol === secondSymbol &&
+        firstSymbol === thirdSymbol
+      ) {
+        winner = currNames[firstSymbol];
+        break;
+      }
+    }
+    return winner;
+  }
 
   return (
     <main>
       <div id="game-container">
         <ol id="players" className="highlight-player">
           <Player
-            name="Player 1"
+            name={players["X"]}
             symbol="X"
             isActive={currPlayer === "X"}
+            changeNames={handlePlayerNameChange}
           ></Player>
           <Player
-            name="player 2"
+            name={players["O"]}
             symbol="O"
             isActive={currPlayer === "O"}
+            changeNames={handlePlayerNameChange}
           ></Player>
         </ol>
-        {winner && <GameOver winner={winner}></GameOver>}
+        {(winner || draw) && (
+          <GameOver winner={winner} onReset={handleReset}></GameOver>
+        )}
         <GameBoard
           onSelectSquare={handleCurrPlayer}
-          turns={gameTurns}
           board={currBoard}
         ></GameBoard>
       </div>
