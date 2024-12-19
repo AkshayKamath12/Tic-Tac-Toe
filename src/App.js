@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Player from "./components/Player.js";
 import GameBoard from "./components/GameBoard.js";
 import Log from "./components/Log.js";
 import GameOver from "./components/GameOver.js";
 import { WINNING_COMBINATIONS } from "./winning-combinations.js";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { db } from "./firebase.js";
+import { addDoc, collection } from "firebase/firestore";
 
 function deriveActivePlayer(gameTurns) {
   return gameTurns.length > 0 && gameTurns[0].player === "X" ? "O" : "X";
@@ -21,6 +24,21 @@ const players = {
 };
 
 function App() {
+  const [username, setUsername] = useState("")
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log(user.email);
+        setUsername(user.email);
+      } else {
+        console.log("logged out");
+        setUsername(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
   const [currNames, changeNames] = useState(players);
   const [gameTurns, setGameTurns] = useState([]);
 
@@ -80,6 +98,15 @@ function App() {
         winner = currNames[firstSymbol];
         break;
       }
+    }
+    if(winner != null){
+      const outcomesRef = collection(db, 'outcomes');
+      addDoc(outcomesRef, {email: username, winner: winner}).then(res => {
+        console.log(res);
+      }).catch(err => {
+        console.log(err);
+      })
+
     }
     return winner;
   }
