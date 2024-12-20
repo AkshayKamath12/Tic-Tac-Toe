@@ -4,7 +4,7 @@ import GameBoard from "./components/GameBoard.js";
 import Log from "./components/Log.js";
 import GameOver from "./components/GameOver.js";
 import { WINNING_COMBINATIONS } from "./winning-combinations.js";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { db } from "./firebase.js";
 import { addDoc, collection } from "firebase/firestore";
 
@@ -54,6 +54,7 @@ function App() {
       return updatedTurns;
     });
   }
+
   function deriveGameBoard(gameTurns) {
     let currBoard = [...initBoard.map((array) => [...array])];
     for (const turn of gameTurns) {
@@ -63,6 +64,8 @@ function App() {
     }
     return currBoard;
   }
+
+  
 
   let currPlayer = deriveActivePlayer(gameTurns);
   let currBoard = deriveGameBoard(gameTurns);
@@ -122,7 +125,25 @@ function App() {
     return winner;
   }
 
+  function handleSignOut(){
+    const auth = getAuth();
+    signOut(auth).then(()=>{
+      console.log("signed out")
+    }).catch((err)=>{
+      console.log(err);
+    })
+  }
+
   return (
+    <>
+    <header>
+      <div className="sign-out">
+        <button className="button-77" role="button" onClick={handleSignOut}>Sign Out</button>
+      </div>
+      <img src="game-logo.png"></img>
+      <h1>Tic-Tac-Toe</h1>
+    </header>
+    <div id="root"></div>
     <main>
       <div id="game-container">
         <ol id="players" className="highlight-player">
@@ -149,6 +170,8 @@ function App() {
       </div>
       <Log turns={gameTurns}></Log>
     </main>
+    </>
+    
   );
 }
 
