@@ -143,7 +143,6 @@ function App() {
       <img src="game-logo.png"></img>
       <h1>Tic-Tac-Toe</h1>
     </header>
-    <div id="root"></div>
     <main>
       <div id="game-container">
         <ol id="players" className="highlight-player">
