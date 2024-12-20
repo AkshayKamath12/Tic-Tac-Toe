@@ -25,6 +25,9 @@ const players = {
 
 function App() {
   const [username, setUsername] = useState("")
+  const [currNames, changeNames] = useState(players);
+  const [gameTurns, setGameTurns] = useState([]);
+
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -39,8 +42,7 @@ function App() {
 
     return () => unsubscribe();
   }, []);
-  const [currNames, changeNames] = useState(players);
-  const [gameTurns, setGameTurns] = useState([]);
+  
 
   function handleCurrPlayer(rowInd, colInd) {
     setGameTurns((prevTurns) => {
@@ -106,7 +108,16 @@ function App() {
       }).catch(err => {
         console.log(err);
       })
+      const gameTurnsStrArr = gameTurns.map((gameTurn)=>{
+        return gameTurn.player + " moved to (" + gameTurn.square.row.toString() + ", " + gameTurn.square.col.toString() + ")"; 
+      })
 
+      const logRef = collection(db, 'gameLogs')
+      addDoc(logRef, {email: username, gameLog: gameTurnsStrArr}).then(res => {
+        console.log(res);
+      }).catch(err => {
+        console.log(err);
+      })
     }
     return winner;
   }
